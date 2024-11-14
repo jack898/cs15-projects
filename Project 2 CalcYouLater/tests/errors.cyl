@@ -1,0 +1,13 @@
+%%% Errors
+%%%
+%%% Causes numerous errors
+%%%
+%%% Author:  Jack Burton jburto05
+%%%
+
+{ 1 2 ++ + + } %% pushes badly formatted rString
+exec           %% should cause "++: unimplemented" and "Error: empty_stack"
+4 0 /          %% should cause "Error: division by 0."
+4
+exec           %% should cause "Error: cannot execute non rstring"
+

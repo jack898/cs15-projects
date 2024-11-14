@@ -1,0 +1,15 @@
+%%% Simple commands
+%%%
+%%% Runs a simple series of arithmetic and comparison commands
+%%%
+%%% Author:  Jack Burton jburto05
+%%%
+
+4
+4
+dup
+drop
+==
+5 4 *
++
+quit

@@ -1,0 +1,191 @@
+/*******************************************************************************
+* Proj 2 CalcYouLater
+* Comp 15 Fall 2023 
+* README
+* Author: Jack Burton jburto05
+*******************************************************************************/
+
+Program Purpose:
+---------------
+
+    Build a calculator that can handle reverse polish notation equations 
+    as well as store/execute strings of RPN equations, chars, and boolean 
+    values.
+
+Compile/run:
+-----------
+
+    Compile the program by typing "make" in the directory with all proj2
+    files and the Makefile. From there to run the program, type ./CalcYouLater
+    and you can begin typing commands.
+
+
+Acknowledgments:
+---------------
+
+    The lecture on stacks helped me implement DatumStack.
+    Venice Cusumano for emotional support through this experience. 
+    
+    All of the wonderful TAs who helped me in office hours, on Piazza,
+    and in lab, thank you for putting up with my (sometimes) silly questions!
+
+Files:
+-----
+
+Datum.h: Datums represent immutable containers for an 
+int, bool, or RPN string (rString) value.
+
+DatumStack.h: Stores a stack of Datum objects which can be popped/pushed, 
+along with functions to check the size and state of the stack.
+
+DatumStack.cpp: Implements the DatumStack class functions.
+
+parser.h: Reads an input stream into an rstring (i.e. std::string)
+
+parser.cpp: Implements the Parser class function.
+
+RPNCalc.h: Implements the RPNCalc class functions.
+
+RPNCalc.cpp: Implement a reverse polish notation calculator that can also 
+    perform various functions with rstrings and file inputs.
+
+unit_tests.h: A unit testing file for the CalcYouLater project. 
+    Runs in conjunction with the unit_test framework to allow for testing of 
+    individual functions.
+
+Makefile: File to build the program.
+
+
+Data Structures:
+---------------
+
+The primary data structure used in this assignment was the stack, specifically 
+to make DatumStack, which implements the stack data structure via std::list. I 
+used std::list because for a stack you are only pushing/popping items from the 
+top/front, and this operation is faster for linked lists than for array 
+lists (vectors). An advantage to stacks is that they only allow a limited set
+of operations versus an std::list or std::vector--this simplicity makes it
+easier to avoid bugs when implementing them. the Last In, First Out (LIFO) 
+setup also makes data management easier. A disadvantage can be the limitations
+if you need to, for instance, access elements in the middle--you simply can't.
+This makes them unsuitable for certain applications. The stack was used for
+this assignment because you need to be able to handle commands that act on 
+multiple elements at once, but it acts on them in a predictable order, so 
+a stack is the most straightforward way to do this. 
+
+A big algorithm used in RPNCalc was the try/catch block. Our program was 
+expected to never crash, so try/catch blocks were necessary to account for when
+a user gives invalid input. The try/catch block will attempt to execute the
+try block, and if this throws any errors, the catch block will be called. For
+this assignment, the catch block would output the appropriate error to stderr
+and then the program would continue prompting for commands. An advantage to 
+using try/catch blocks is that you can catch ANY invalid input a user could
+enter and throw an error. A disadvantage is that there could still possibly
+be some kind of user input that causes a logic error with the program but does
+not "throw" an error, and the try/catch block could still miss it.
+
+
+Testing:
+-------
+
+For phase 1 for DatumStack, we were simply implementing a stack, which we 
+learned in class, so I encountered no issues while writing this class. Many
+of the functions simply rely on functions built into the std::list package which
+is used to represent a stack. After building each function, I unit tested them
+with potential edge cases, ensuring they threw the correct errors and error
+messages.
+
+For the Parser class, I initially had some trouble not duplicating the last
+closing bracket. I fixed this by switching from using .eof() to using a loop
+that reads into a stringstream, ending the loop when the .fail() condition
+occurs here. I had a solution using a stack, but Milod said in lecture that
+a stack was not neccessary, so I then switched to a recursive solution. This
+required some modifying to make sure it properly read nested rstrings in, but
+once I set up the base cases properly it worked. I had already submitted an
+implementation using stacks that did not pass the parseRString autograder tests,
+so I re-built unit tests based on these autograder tests.
+
+For the RPNCalc class, I began by just testing that the constructor and
+destructor worked properly. I then worked on making run and the command
+processing loop work properly, which took lots of debugging to make sure I
+could quit when wanted. I directly compared to theCalcYouLater to determine
+when I had this set up properly--I was trying to use recursion but realized
+that iteration ultimately made more sense. From there, I began writing each
+individual command for the command processing loop. Right after I wrote each
+command, I manually compared the outputs to theCalcYouLater, then wrote unit
+tests to ensure no errors were being thrown/errors were thrown in the correct
+way. Then, I diff tested each of these commands by using files with 
+various sequences of commands and comparing to theCalcYouLater with those 
+same input files.
+
+An issue I encountered was that my fileHandler (the function to handle when
+a user puts in the file command) was not working properly--I was using getline
+to get each line of the file, but if it encounters a "{" it needs to run 
+parseRString to grab the entire rString, and right after this parseRString for
+some reason it was reading in an empty line and sending that to processCommand.
+This issue led me to realize that I could actually be more modular by using the
+same process for reading from a file as I used for the "exec" command to read
+an rString. From there, I was able to build one helper function to
+use in both exec and file.
+
+For each input file, I ran theCalcYouLater and CalcYouLater with them, pushed
+each one to a respective .out file, and diff'd these .out files.
+For each .cyl file, I ran ./cylc to convert them to commentless cylc files, and
+then I would run ./CalcYouLater and ./theCalcYouLater with their output streams
+redirected to respective .out files. I would then type an rString with the
+.cylc file and then type file, and then diff these .out files.
+
+DIFF TESTS--INPUT FILES USED:
+add_fib_fact.in: Tests each of the given .cyl files (add.cyl, fact.cyl, 
+fib.cyl, n_fib.cyl) by pushing appropriate ints to stack, pushing each .cylc
+file as an rString, and then using file command. 
+
+quit.in: Performs some simple arithmetic and then runs quit command to ensure
+quit works from a file input
+
+simple.in: Pushes rString with simple.cyl and then runs file command.
+
+nested.in: Runs a nested rString and the if command to ensure nested 
+rStrings are handled properly
+
+CYL TEST FILES USED:
+quit.cyl: Pushes and performs simple arithmetic and then runs quit command to
+ensure quit works from a .cyl file
+
+simple.cyl: Performs various simple arithmetic and comparison operations
+
+errors.cyl: Performs various invalid operations to cause different error
+messages
+
+Time Spent: 17hrs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+% Performs simple arithmetic and then does quit command
+% to ensure quit is handled properly from a .cylc file
+% Author: Jack Burton jburto05
+1
+5
+4
++
+*
+print
+quit

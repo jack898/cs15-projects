@@ -1,0 +1,249 @@
+/*******************************************************************************
+* Proj 3 Zap
+* Comp 15 Fall 2023 
+* README
+* Author: Jack Burton jburto05
+*******************************************************************************/
+
+B. Program Purpose:
+---------------
+    Build a tool that can compress and decompress ASCII text files using the
+    Huffman coding algorithm.
+
+
+C. Acknowledgments:
+---------------
+    Shoutout John Cha FR
+
+
+D. Files:
+-----
+
+README: Detailed explanation of utilization and testing for the Zap program
+
+Makefile: File to build Zap
+
+unit_tests.h: Unit testing framework to individually test each function
+as they are implemented
+
+HuffmanCoder.h: Declares functions for the HuffmanCoder class, which handles
+encoding "zapping" and decoding "unzapping" of valid files.
+
+HuffmanCoder.cpp: Contains the HuffmanCoder class function definitions.
+
+main.cpp: Main driver function which ensures valid arguments have been provided
+and calls encode/decode from HuffmanCoder accordingly.
+
+testNewlinesSpaces.txt: test file for zapping that has newlines and spaces
+
+testSimpleStr.txt: test file for zapping with a simple str, no newlines/spaces/
+nonprinting ascii
+
+nonprinting.txt: test file for zapping with all nonprinting ascii chars
+
+emptyFile.txt: fully empty txt file to ensure zapping empty file throws
+proper error
+
+onechar.txt: test file with one ascii character
+
+sameletter.txt: test file with repeated but only one unique ascii character
+
+E. Compile/run:
+-----------
+    Run make (if not first compilation, run make clean first to get 
+    rid of old .o files). Ensure you have BinaryIO.o and HuffmanTreeNode.o
+    or compilation will not work properly.
+
+F. Data Structures/Algorithms:
+---------------
+    DATA STRUCTURES
+    ---------------
+    Just arrays used in phase 1 for counting character frequencies, as there 
+    is a set number of ASCII characters (256), and the constant access time of 
+    an array is ideal for updating frequencies of each character.
+
+    Arrays were used in phase 2 for the array which kept track of the character
+    codes for the same reason as above--it is a constant number--256--and O(1)
+    access time for updating/accessing the codes for a character.
+
+    The main data structure of the project was the Huffman tree. Huffman trees
+    are helpful because they follow the tree ADT, which makes them
+    easy to navigate and organize
+    in a hierarchy. For the huffman tree, specifically, this hierarchy has to 
+    do with the frequency of each character in the text--the more frequent 
+    characters will be closer to the root, and the less frequent ones "deeper" 
+    in the tree. This structure in the end allows you to create binary codes to 
+    represent each character based on its location in the tree, and the codes 
+    are much shorter than 8-bits (the typical ASCII code) for frequent 
+    characters. In the end, this achieves compression of a given text.
+
+    For phase 2, I used a priority queue to build out a valid Huffman tree 
+    from the nodes representing each character. This was used because a 
+    priority queue allows the elements to remain sorted via a comparator 
+    function--in our case, a given comparator function NodeComparator 
+    which compares each character node's frequency. This allowed us to build 
+    the tree using a min-heap structure, as it keeps the least frequent 
+    characters at the top of the queue to be pulled and placed into the next 
+    set of child nodes.
+
+    The pair data structure was used in the decoder function when retrieving 
+    the bitstring and serialized tree from a compressed zap file. This was 
+    used because it is more efficient than having two seperate functions 
+    accessing that zap file and separately returning the bitstring and 
+    serialized tree. This allows one function to retrieve and return both 
+    of those, and allows one variable to represent both values distinctly 
+    as well instead of declaring two seperate strings.
+
+    ALGORITHMS
+    ----------
+    Serializing a huffman tree involved a recursive algorithm that
+    performed a post-order traversal of the tree. This 
+    algorithm builds a string recursively by starting at the root node of the
+    tree. If it is a leaf node, it appends "L" and concatenates the value of
+    the node to that same string with L--concatenation is used here instead of
+    appending for efficiency. If the node is internal (i.e. not a leaf), it
+    adds "I" to the string and recursively serializes the left and right
+    children of this node. Overall, this will build a string that one can use
+    to deserialize and make a huffman tree from.
+
+    Deserializing a serialized huffman tree string had a more involved, but 
+    still recursive and effectively a post-order traversal, algorithm--for 
+    my solution I used an index variable, so I had the main 
+    deserialize function call a helper that contained an index
+    starting at 0. From there, if the value at position "index" in the
+    serialized string was I, I created a new internal Huffman tree node,
+    iterated the index, and then recursively deserialized the left and right
+    children of this internal node by doing two recursive calls but iterating
+    the index between them. After these calls I return the internal node.
+    Otherwise, the node must be a leaf, so I had an else which also 
+    iterated the index, stored the leaf's character, created
+    a new leaf node with that character, and returned it.
+
+    I also had another post-order traversal in my recycle function which would
+    deletes the given Huffman tree from the heap by first deleting all left
+    children, then right children, then the root.
+    
+
+
+
+
+
+G. Testing:
+-------
+    I wrote various unit tests for each function as I made it. 
+    For count_freqs and deserialize_tree I had few issues; my unit tests 
+    pretty much worked the first time I made them. However, for deserialize 
+    tree I had a lot of trouble conceptually understanding how to reconstruct 
+    the tree from a string.
+    I went to office hours and was suggested to make a helper function to 
+    iterate an index variable, but I still was not accessing the internal/leaf 
+    nodes in the proper order with this helper function. I fixed this by
+    using the index variable to iterate the string being checked,
+    rather than trying to use substrings. This made deserialize work properly.
+
+    Overall for debugging in phase one I started with a one-node tree, and went
+    up to the figure 1 tree which is a fairly large tree.
+
+    As I built my main.cpp file, I tested to ensure it threw the usage
+    and exited when improper args were provided by just calling it from
+    terminal with invalid arguments.
+
+    When I started on phase 2, I moved my serialize/deserialize functions over
+    to the HuffmanCoder class, and because I was also planning to modify these
+    to work as helper functions for encoder()/decoder(), I commented out the
+    original phase 1 unit tests. I also commented out the "private" section
+    in HuffmanCoder.h so I could individually unit test my helper functions for
+    encoder()/decoder().
+
+    As I worked on phase 2, I built out each function and necessary helpers for
+    them based on the steps given for "Encoder" and "Decoder" in the spec,
+    respectively. After building each individual step's function, or each 
+    helper for that step, I unit tested them, handling the various edge cases. 
+    This assignment appeared to have less edge cases than others--I really only
+    needed to test a one character file, a simple string file, and a very long
+    file (i.e. provided shakespeare file), and from there I could be pretty
+    certain that my implementation of the encoder/decoder would work for
+    any other valid ASCII input files/valid binary zap files.
+
+    The one edge case I was having trouble handling was when the serialized 
+    tree did not match the binary--i.e. bad_zap_file. I could not figure out 
+    how to incorporate this edge case into my decodeHelper function without it
+    messing up decoding of proper files. I ended up handling this by checking,
+    outside of the for loop which iterates through the bitstring, if my 
+    huffman node pointer "curr" ended up at root--e.g., it ended up at a leaf
+    in the end. If the loop ends and the pointer was not at a leaf, that means
+    the tree did not match the given bitstring. 
+
+    Another final issue I encountered was in the decoder function, I was not
+    handling the edge case of a single unique ascii character properly--I 
+    interpreted this case to mean when there was one character in a file,
+    but I realized I needed to handle a repeated same character as well. I
+    modified this edge case to check if the root was a leaf and then if it was,
+    a loop would add the correct amount of that character to the decoded string
+    based on the length of the bitstring.
+
+    Finally with edge cases handled, the way I tested my final product was by
+    zapping and unzapping all of my test files and the given test files
+    using my version, ensuring the unzapped version was the same as the 
+    original test file. I also checked, for each zapped file, that it was
+    the same size as a zapped version from the_zap. Lastly, I also zapped
+    files with my version and then unzapped them with the_zap, and vice
+    versa, to ensure I had built proper encoder/decoder functions.
+
+    TEST FILES USED:
+    See specific file descriptions in "Files" section
+
+    PHASE 1:
+    testNewlinesSpaces.txt
+    testSimpleStr.txt
+    nonprinting.txt
+
+    PHASE 2:
+    emptyFile.txt
+    testNewlinesSpaces.txt
+    testSimpleStr.txt
+    nonprinting.txt
+    sameletter.txt
+    onechar.txt
+    (Below were files provided for Zap testing that I used--
+    no descriptions in Files section since descriptions in spec.)
+    works_of_shakespeare.txt
+    all_conll_english.txt
+    ecoli.coli
+    sentences.txt
+
+    
+
+
+I. Time Spent: 20hrs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

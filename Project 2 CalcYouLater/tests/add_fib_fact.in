@@ -1,0 +1,10 @@
+{ add.cylc }
+4
+{ fact.cylc }
+print
+5
+18
+{ n_fib.cylc }
+20
+{ fib.cylc }
+quit

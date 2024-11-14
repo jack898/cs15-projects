@@ -1,0 +1,325 @@
+Name: Jack Burton, Maurice Jang
+12/3/2023
+Gerp Project README
+
+Program Purpose
+---------------
+Search file directories for a word and return any files containing that word
+(either case sensitively or insensitively), including the specific line(s) 
+that the word appears on.
+
+Acknowledgements
+---------------
+The many TAs who helped us out in office hours.
+
+Files Provided and Purposes
+---------------
+**NOTE** The directories in themselves are not included in submission because
+of how Gradescope works, but all contained testing (.txt) file should have 
+been submitted.
+
+README: Gerp project overview and instructions for compilation.
+
+main.cpp: handles commandline arguments and sets the query going
+
+hash.cpp: implementation of the hash table
+
+hash.h: interface of the hash table
+
+index.cpp: implentation of the index class functions.
+
+index.h: interface for index class that indexes that contents of a directory
+into a hash to be queried.
+
+query.h: interface for a query class that will search a file directory
+based on user queries.
+
+query.cpp: implementation of query class functions.
+
+testDir: A test directory with files and subdirectories, used to 
+test the indexing class. Listed below are each of the subdirectories and files
+within them.
+    test1.txt
+    test2.txt
+    testSubdir
+        testSub1.txt
+        testSub2.txt
+        testSubSubDir
+            testSubSub1.txt
+ - Each .txt file in the subdirectories just contains small strings of words,
+ some multiple lines and some only one line.
+
+testFile.txt: a simple txt file used to test storage of the lines of a file
+during indexing.
+
+newTestDir: A test directory used to hold one testing file lineEmptyline.txt.
+    lineEmptyline.txt: test file with text, an empty line, then more text to 
+    ensure empty line isn't ignored (text is indexed at proper spots)
+
+myCommands.txt: sample commands file to test that program handles file inputted
+commands properly
+
+refCommands.txt: sample commands for ref to handle - used because we wanted to 
+be able to have the reference write to a different file then our implementation
+
+testMultiple: A test directory holding nested files in subdirectories with
+repeated words in all of the files.
+    text.txt: A text file with "word" repeated many times on one line
+    and some newlines and "word" again.
+    sub2
+        textsub2.txt: A text file with "word" repeated again many times.
+
+unit_tests.h: Unit testing framework to test each function for phase 2 
+** NOTE: Phase 1 unit tests are still included at the top of unit_tests for
+proof of testing, but have been commented out since phase 1 function 
+implementations have been modified.
+
+
+Compiling/Running
+---------------
+To unit test the functions, run unit_test
+To compile and run gerp, run make clean if it is not your first time running
+it. Then run make, and then to use gerp, launch it like so:
+./gerp inputDirectory outputFile, where inputDirectory is the directory
+to index and search and outputFile is where you want the results to be
+stored.
+
+Architectural Overview
+---------------
+At a high level, our implementation is split into three classes (excluding
+the given DirNode and FSTree classes):
+    Hash class: This class implements our hash structure which is how we chose
+    to store words and their occurences (more details on this hash structure
+    can be found in the Data Structures/Algorithms section).
+
+    Index class: This class implements the indexing functions which will
+    take in a search directory and index the files into our hash structure. It
+    therefore relies on the hash class.
+
+    Query class: This class implements the query loop which allows a user to
+    search for files repeatedly and returns the correctly formatted outputs.
+
+From a slightly lower level view: A query instance is initialized in main, and 
+then when the user inputs a query, the query class will pass the user-provided
+search directory to the Index class. The Index class will then iterate through
+all provided files (in the search directory and all subdirectories), organizing
+structs that include each word from the files and the occurence(s)
+(if it appears multiple times in the same file, there will only be one struct
+but it will store a vector with all of the locations of the occurences). The
+Index class, when it is indexing an individual word, will then call the public
+wrapper in the Hash class which hashes that word's struct (with its occurences)
+into an appropriate index in the hash.
+
+That is all just for indexing of the search directory--for searching,
+our program calls our search function wrapper within the Index class.
+This wrapper will strip the search query to make it a proper "word" per
+the spec, and then it will call the searchTable hash function with the stripped
+word and an empty wordInstance. The hash searchTable function will then 
+iterate through the appropriate bucket for that word in the hash, and if we
+are doing a case insensitive search (indicated by a bool passed to this from
+the search wrapper), it will iterate through all of the cases of a word, which
+will all be in one bucket due to our design, and concatenate all of their
+line numbers/file paths into that wordInstance. Otherwise if it's a case
+sensitive search, it will just return the wordInstance struct for the
+occurence. From there we still have to handle if a word appears with
+different cases multiple times on the same line, and this is done by
+making a set, and then inserting the properly formatted search results into
+the set. If there are any duplicates, because of the behavior of sets, these
+will be removed. 
+
+Data Structures/Algorithms Outline
+---------------
+TIME COMPLEXITY CONCERNS/SOLUTION
+For indexing the given search directory, we decided that the most efficient
+solution (given our constraints on includes) was to use a hash where the keys
+would be the words from each file. The reason we wanted to use a hash is 
+because they provide the best time complexity, on average O(1), for retrieval.
+
+Another element to reduce time complexity is in the Index class, we have a 2D
+array fileLines which stores the lines of each file in the search directory.
+Since we are already traversing each line of each file anyway to store
+the words in the hash, storing those lines in this 2D array as we go means that
+whenever a word is searched, when we need to print the lines that it appears on
+we can just go to the index from filePathIndexes in this fileLines vector
+and return the line from there, making this O(1) access time rather than
+having to locate the file and then traverse it again to return the line.
+Of course this does add space complexity but we felt that the significant
+time savings were worth the trade-off.
+
+SPACE COMPLEXITY CONCERNS/SOLUTION
+However, for space complexity purposes, we needed to avoid duplicate storage
+as much as possible. There were a few situations where we needed to consider
+duplicates. For one, if a word appeared many times in the same file (or even
+in different files in a search directory), we didn't want to store each
+occurence in its own distinct spot. But for gerp to work, we still would need
+to store the line number of each of these occurences, and the full path of each
+respective file that the word was found in, so that we could retrieve 
+and display the line in the gerp search results.
+
+Our solution to avoid these duplicates was to built a struct wordInstance. This
+struct would exist for each unique word in a search directory--that is, for
+each word (case sensitively), there will only 
+be ONE wordInstance struct. Thus, it contains a string which stores the word
+that it represents. Then it contains two vectors of ints. One of the vectors
+of ints stores each line number that the file is found on (across all files
+in the search directory--this will make more sense after I describe the next 
+vector). The other vector stores an index for the filePaths vector, which
+is an indpendent structure containing the full paths of each file from the 
+search directory. Because of how the Index class constructs the hash, the 
+indices of the first and second wordInstance vectors will line up--meaning 
+that for each occurence of the word, you can check that index in the first and 
+second wordInstance vectors to get both the full file path where it is found 
+AND the line number in that file. 
+
+HASH IMPLEMENTATION DETAILS
+Our hash uses a vector. For each bucket of the hash (slot in the vector), 
+to handle potential collisions, we used chaining by making the buckets linked
+lists. We chose linked lists instead of vectors because 1. we covered
+chaining with linked lists in class, and 2. collisions should be incredibly 
+uncommon and thus it would be very rare that we actually have to iterate 
+through the linked list--if we had to iterate through it frequently 
+a vector would make more sense so that we could jump to indices. 
+The objects within this linked list (i.e. the values for each key,
+since the keys are the words) were wordInstance structs. Within each bucket,
+all of the different case versions of a word would be stored in
+unique wordInstances, but as described above in the space complexity section,
+any duplicate occurences of words will just be appended to the existing
+wordInstance struct. The wordInstance struct includes two vectors lineNumbers
+and filePathIndexes. lineNumbers stores the line number for each occurence
+of the word, and then (at the same index in filePathIndexes as in lineNumbers--
+done intentionally to keep track of specific instances), filePathIndexes
+has an int representing an index in the filePaths vector (defined in
+the Index class), which stores the full path of each file. Thus since the
+indices of lineNumbers and filePathIndexes correspond, you can retrieve both
+of these at the same index to get the specific file path and the line(s) within
+that file where a word occurs. Then using that index from the filePathIndexes,
+you can also go to fileLines at that index, go to the index from lineNumbers,
+and overall this will give you the word, the line number where it occured,
+and the full path to that file, allowing you to return it in the proper
+format for the output.
+
+We also use sets at one point in the searchTable wrapper function in the Index
+class to handle potential duplicates (this case is discussed in an earlier
+paragraph). We chose sets here because they will naturally not store
+duplicates which prevents us from having to manually remove them.
+
+ALGORITHM BREAKDOWN/COMPLEXITY
+An example of an algorithm we used was our method to handle case insensitive
+search. Our primary function to search the hash table is in the Hash class,
+called searchTable. This function takes in a reference to the string with
+the word to search (which has already been previously stripped to fit the spec
+guidelines for a word), a bool indicating whether its case insensitive search
+or not, and a reference to a wordInstance object. The algorithm first gets
+the appropriate hash table index (bucket) by using the wordHasher function on 
+the given word. It then iterates through this bucket (which as previously
+described, is a linked list). If it is a case insensitive search, it calls
+a "compareInsensitive" function to ensure that the tolower versions of
+the found word and our word match. If they do, then it uses the std::vector's
+"insert" function to add the line numbers and file path indexes from
+each wordInstance which matches insensitively to the given word into the
+wordInstance that was passed in as a function argument. Otherwise, if it is 
+a normal (case sensitive) search, it just finds the wordInstance struct whose
+word string matches the search string.
+
+This algorithm's outermost loop is a for that iterates through the linked list
+which represents a bucket--so this part is O(max bucket size). Within this
+for loop, if we are doing case insensitive search, we perform two std::vector
+inserts per loop, where we insert the entirety of the lineNumber and
+filePathIndexes vectors into the wordInstance's lineNumber and filePathIndexes
+vectors. The std::vector insert() function's time complexity is n + m, 
+with n representing the number of elements being inserted (or in this case,
+size of lineNumber/filePathIndexes arrays, since they are the same size), and
+m representing the number of elements being shifted to insert this. Since
+we are inserting at the END of the existing lineNumbers/filePathIndexes vectors
+no shifting occurs. So that means this insertion step is a total of 
+2 * lineNumbers.size() time complexity, and that is within the for loop from
+before. 
+
+Thus our overall worst case time complexity can be written as O(b + s), where 
+- b represents the maximum bucket size (which should rarely be very large
+unless there is a file with every case option for a very long single word)
+- s represents the sise of the longest lineNumbers array found for 
+any cases of a word (assuming user is doing case insensitive search as this
+adds this complexity--it would only be O(b) otherwise)
+
+
+Testing
+------
+For testing phase 1, we unit tested each function as we implemented them.
+Once we had a complete implementation, we tested it using "testDir", which 
+was a directory with various subdirectories and files, ensuring that they 
+were all couted.
+
+For phase 2, we first built the majority of the index class. We unit
+tested each function as we implemented them, and we did not really encounter
+any issues building out the more basic indexing functions. We built out the
+function to index each word almost entirely, EXCEPT leaving out the call to 
+the Hash class to hash the word struct since we had not built the hash yet.
+We also tested the indexing functions by using a test directory of files called
+testDir (more details in Files section) which contains various nested
+subdirectories and lots of .txt files at all of the different levels. After
+unit testing every function thoroughly and testing to ensure all files
+in testDir were indexed properly, we could be confident our Index class worked
+minus the hashing portion, which we would return to later.
+
+We then built out the Hash class. This was much more challenging since we had
+never fully implemented a hash ourselves in class or in labs, so we had to 
+spend quite a bit of time in office hours with various TAs to figure out
+how to build the hash and what functions we would need in the Hash's class.
+We first just made sure that our wordHasher function could hash individual words
+properly, i.e. returning unique indices for all of them. We also had trouble
+figuring out how large to make our table--a TA recommended that we start at
+10000 so that is what we chose for the Hash constructor. From there, we built
+the helper functions for the hash table such as the expansion one. Once we 
+thoroughly tested this expansion function and unit tested each of the other
+Hash class functions, we could finally build the searchTable function which
+would be able to retrieve the index for a particular word. This class was the
+most time-consuming and required the most debugging, not because the
+implementation was particularly complicated but because we did not have much
+practice with hashes beforehand, and thus had to deviate quite a bit from our
+design doc ideas.
+
+Once the Hash class was implemented, we returned to the Index class. We thought
+it would be as simple as just calling the hash function on a word passed into
+the IndexWords() function in the Index class, but this created various other
+errors that we had to mitigate. We realized the underlying issue was that
+during our catalog() function of indexing, which stores each file from a line,
+we were not increasing the size of the fileLines vector (which is a 2D 
+array storing the lines of each file in the search directory), thus there was
+nowhere for this new line to be stored. Once we resized the fileLines vector
+during each call to catalog() using .resize(), our Index class was working.
+We ensured the Index class was fully working with one very large unit test,
+testSubDirIndexing(), which ensures that every word from each file in testDir
+is properly indexed at the correct location in the hash table.
+
+With the Index and Hash functions confirmed to be fully working, we
+began building the Query class. The query loop was relatively straightforward,
+and with just a few cases to handle (such as taking in cin and from a command
+file), we just manually tested this portion by diff testing against the_gerp
+with different queries.
+
+Now with all of the appropriate classes implemented, we built the main file
+and started diff testing against the_gerp with the given gerp test directories.
+We realized our program was not handling case insensitive search correctly--
+it was only returning the instances of words from the first file instead of
+all of the files in the search directory. We realized this was happening
+because our data structures store the different cases of words in seperate
+structs--so to account for all of these, we needed to add a loop in our 
+hash's searchTable function that, when a case sensitive search occured,
+would add all of the instances of the different cases into one wordInstance.
+
+(Further descriptions of each test file can be found in the FILES section)
+TEST FILES
+*Provided testing files*
+large/medium/smallGutenberg
+testDir
+
+*Our testing files*
+testDir and all of its listed subdirectories/contained files
+newTestDir and all of its listed subdirs/contained files
+testMultiple and all of its listed subdirs/contained files
+myCommands.txt
+
+HOURS SPENT
+------------
+30

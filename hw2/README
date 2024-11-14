@@ -1,0 +1,179 @@
+/*******************************************************************************
+* Homework 2 LinkedLists
+* Comp 15 Fall 2023 
+* README
+* Author: Jack Burton jburto05
+*******************************************************************************/
+
+Program Purpose:
+---------------
+
+    A class implementation of the linked list data structure, which is an 
+    alternate form of the list ADT. Gives client the ability to store 
+    lists of chars in a dynamic format, being able to insert, remove, 
+    concatenate and modify CharLinkedLists through various public functions.
+
+Compile/run:
+-----------
+
+    Compile and run all tests using the command "unit_test"
+
+
+Acknowledgments:
+---------------
+
+    I modified my unit tests from the CharArrayLists HW, since the goal of 
+    the functions for both homeworks was identical.
+
+Files:
+-----
+
+CharLinkedList.h: Interface for a CharLinkedList Class
+
+CharLinkedList.cpp: Implementation of a CharLinkedList Class.
+    The default constructor for this class initializes a LinkedList with
+    numItems set to 0, and the front/back elements both being null pointers.
+
+unit_tests.h: A unit testing file for the CharLinkedList Class. 
+    Runs in conjunction with the unit_test framework to allow for testing of 
+    individual functions.
+
+Makefile: File to build the program.
+
+
+Data Structures:
+---------------
+
+    This main data structure of this HW is a LinkedList, which is a 
+    method of implementing the list ADT. Specifically for this project 
+    we used doubly linked lists. The building blocks of this structure 
+    are nodes, which are structs in this case composed of a char, a 
+    pointer to the previous node, and a pointer to the next node. For the front
+    node, the prev pointer would be a nullptr, and for the back node the next
+    pointer would be a nullptr.
+
+    An advantage to linked lists vs. ArrayLists is that the nodes 
+    can be anywhere in memory as long as each node keeps track of the 
+    previous and next nodes. An advantage of this structure is that 
+    if you have access to the front node, we can reach all subsequent nodes. 
+
+    A disadvantage of linked lists is that there are many more edge cases 
+    where you need to change which node is set as the front/back node, 
+    and if you mess this up it can prevent access to the entire list of nodes. 
+
+
+Testing:
+-------
+
+    I tested each function as I wrote them by copying over my unit tests 
+    from the unit tests for CharArrayList and swapping CharArrayList 
+    with CharLinkedList where neccesary. This works because the output of 
+    these functions for a client is supposed to be the same for linked 
+    lists and array lists, even if their implementations are quite different.
+
+    One issue I encountered was with my copy constructor; 
+    it was throwing a seg faulting and I could not figure out why. Eventually,
+    I drew it out on paper and realized I was attempting to dereference a
+    nullptr in certain cases, hence the segfault. From there, I remembered that
+    I had a functioning pushAtBack() function, so I just used that in the loop
+    to copy nodes instead, and this fixed my issue as well as made my code
+    more modular.
+
+Time Spent: I spent approximately 8 hours working on this project.
+
+Efficiency/Timing Questions:
+--------
+----------------------------------------------------------------------
+INSERTION OPERATION                                 Time (nanoseconds)
+----------------------------------------------------------------------
+pushAtFront 100 times                               3375
+pushAtBack 100 times                                2343
+insertAt middle of list 100 times                   2124594
+----------------------------------------------------------------------
+REMOVAL OPERATION                                   Time (nanoseconds)
+----------------------------------------------------------------------
+popFromFront 100 times                              2227
+popFromBack 100 times                               2286
+removeAt middle of list 100 times                   2405003
+----------------------------------------------------------------------
+ACCESS OPERATION                                    Time (nanoseconds)
+----------------------------------------------------------------------
+call first() 100 times                              717
+call last() 100 times                               766
+call elementAt() for middle of list 100 times       5459808
+----------------------------------------------------------------------
+
+1. For insertion, pushAtBack was fastest, then pushAtFront, and then insertAt
+was significantly slower. For removal, popFromFront was fastest and popFromBack
+was very slightly slower, and then removeAt was significantly slower. 
+For access, first was fastest, then last, then elementAt was significantly
+slower.
+
+2. The elements of a linked list, unlike the elements of an array list,
+are not contiguous. This means that for operations like removeAt, elementAt,
+or insertAt, you have to iterate through every item in the linked list to 
+find the correct index, versus for array lists you can jump directly to the 
+correct index. For that reason, these three operations took significantly
+longer than any other operations. However, having pointers to the front
+and back elements meant that first, last, and pushing/popping from the front
+or back were extremely efficient.
+
+3. front and back took almost the same amount of time, but pushAtFront, 
+popFromFront, pushAtBack, and popFromBack were all significantly faster for
+linked lists vs array lists. This is because linked lists use nodes AND keep
+track of the front/back elements with a pointer, so all that has to be done is 
+to delete that node and correct the next/prev pointers for surrounding nodes. 
+When pushing/popping from the front/back for an array list, you have to
+remake the entire backend array to shift all of the items over accordingly. 
+elementAt was significantly slower for linked lists vs. array lists, though,
+because for linked lists you have to iterate through the entire list to find
+a specific element, versus for array lists you can jump directly to that index.
+
+Additional Questions:
+--------
+1. Insertion functions were generally easier to implement for linked lists 
+vs. array lists because the nodes just have to be created and then linked; 
+for array lists, we had to create an entirely new array and shift all 
+of the elements.
+
+2. Access functions, i.e. elementAt, were generally more difficult to implement 
+for linked lists vs. array lists because the nodes are not contiguous; for 
+array lists, we could just jump to the index and return that value, but 
+for linked lists we had to follow the links from the front node to find 
+the correct index node.
+
+3. If CharLinkedLists were implemented properly, they should not have to
+ change any of their actual functions that utilize CharArrayList public 
+ functions, as the behavior should still be the same. They would just 
+ need to change any instances of CharArrayList to CharLinkedList.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

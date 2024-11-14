@@ -1,0 +1,157 @@
+/**********************************************************
+* Project 1: Metro Simulator
+* CS 15
+* README
+* Jack Burton / jburto05
+* 10/9/23
+*********************************************************/
+
+Compile/run:
+*********************************************************
+Makefile will compile and link all files properly. Just type
+"make" in console, and then run the program using 
+"./MetroSim [stationsFile] [outputFile] [commandsFile (optional)]"
+
+
+Program Purpose: 
+*********************************************************
+Build a program that simulates a train travelling on the Green Line, managing 
+Passengers who board/depart at specified stops via an input commandFile or 
+manually typed commands. This simulation is interactive with a UI that updates
+after each command and an output file listing the passengers as they depart.
+
+
+Acknowledgements: 
+*********************************************************
+Previous ArrayList and LinkedList HW helped me to understand 
+how to implement the train and PassengerQueues as std::lists and std::vectors,
+although since we never actually learned how to use the C++ includes versions 
+of lists and vectors, I learned this new syntax through cplusplus.org. 
+The class lecture helped me to build the generic file stream opening function
+in main.
+
+
+
+Files:
+*********************************************************
+the_metroSim:
+reference implementation for students to see how the program works
+
+Passenger.h:
+Passenger is a class that represents a passenger who can board/exit
+a PassengerQueue (a train) when specified by command "p". 
+
+Passenger.cpp:
+Implements the Passenger class functions.
+
+PassengerQueue.h:
+PassengerQueue is a class with an std::list of Passenger elements,
+organized into queues which each represent a station.
+     
+PassengerQueue.cpp:
+Implements the PassengerQueue class functions.
+
+Train.h:
+Train is a class with an std::vector of PassengerQueues, each of these
+PassengerQueues corresponding to a station, representing "train cars".
+
+Train.cpp:
+Implements the Train class functions.
+
+MetroSim.h:
+MetroSim is a class which contains an std::vector of PassengerQueues, 
+representing the stations from an input stationFile, and contains the primary
+functions which operate the simulation, such as updating the UI and parsing/
+executing user commands.
+
+MetroSim.cpp:
+Implements the MetroSim class functions.
+
+main.cpp:
+Handles simple driver functions, such as reading in files and ensuring
+proper amount of args given.
+
+
+Data Structures:
+*********************************************************
+An std::list of Passenger elements is being used for
+PassengerQueues. A linked list is used here because Passengers will need
+to be frequently popped from the front or pushed to the back of the queue,
+and for Linked Lists these operations are both O(1) whereas for ArrayLists
+(vectors) these would be O(n) operations. This is due to linked lists being
+non-contiguous in memory and vectors being contiguous. These lists will never
+have to deal with Passengers being added anywhere except the back.
+
+std::vectors of PassengerQueues are being used for the train and the stations
+vectors. Vectors are used here because it is possible for passengers to board
+after other passengers but depart before them, or vice versa--i.e., it is 
+sometimes necessary to access middle indices in these vectors, not just the 
+front or back, and since vectors are contiguous, this is a faster operation 
+for them than for linked lists, where you have to iterate through each node
+to find the desired middle index.
+
+
+Testing:
+*********************************************************
+For phase 1, there were a few basic functions such as enqueue(),
+dequeue(), front(), print(), and many of these functions for PassengerQueue
+were simply calls to the std::list package functions which achieve those
+purposes. That said, I unit tested each function as I implemented them,
+and I encountered no issues during this phase of the project.
+
+For phase 2, at first I wasn't even planning to build a train class, but I 
+read on a Piazza post that the spec kind of expected there to be separate
+vectors/lists for the station PassengerQueues and the train PassengerQueues,
+so I decided to make the train one in a Train class. As I wrote each new 
+function for the Train and MetroSim classes, I wrote corresponding unit tests.
+The spec mentioned that we could expect valid commands, station files, etc. so 
+I did not do too much edge case testing in this portion, just thoroughly unit 
+testing with a variety of expected inputs.
+
+My basic structure from the design document mostly worked, but I did not 
+really understand how to build the MetroSim/Train classes when making that
+document, so I had to come up with structures for those classes before writing
+them. My structure there mostly worked once fully implemented. Most of my errors
+came from the links between these classes; I had trouble working out when to 
+use the print function from the PassengerQueue class, and when to use the one
+from the Passenger class, for instance. The multiple levels of abstraction made
+debugging these very time-consuming, though admittedly I could have done better
+documentation beforehand to speed up this process.
+
+Another issue I encountered was that my Passengers were not appearing on
+the train in the order that they boarded--this ended up being because I was 
+trying to reduce repetition by setting a variable to the current PassengerQueue
+outside of the while loops for boarding/departing, but I this current PQ
+variable needed to iterate within the while loop. Once I fixed this, it passed
+diff with the long test_commands.txt file, so I began testing with custom
+station and command files. 
+
+DIFF TESTS--STATION FILES USED*:
+stations.txt: Given stations file
+
+stations2.txt: Stations file with minimum number of stations (2)
+
+stations_samenames.txt: Stations file with very long and duplicate 
+station names.
+
+
+DIFF TESTS--INPUT FILES USED*:
+test_simple_cmds.txt: Tests with a small list of passengers, each boarding at 
+station 1.
+
+test_samestations_manymoves.txt: Tests with passengers boarding and departing
+at same stations (multiple of them), and lots of m m calls.
+
+test_newline.txt: Same as test_simple_cmds but with multiple newlines at EOF
+
+test_commands.txt: Given test file.
+
+* For each diff test, I also compared MetroSim and the_MetroSim's outputFiles.
+
+Part that you found most difficult: 
+*********************************************************
+The open-ended nature of writing the MetroSim and Train classes made it tricky
+for me--this was my first CS project where I was not given implementation
+instructions but expected to still match a demo program exactly.
+
+Time Spent: 22hrs
